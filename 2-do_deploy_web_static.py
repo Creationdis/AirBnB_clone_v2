@@ -1,55 +1,46 @@
 #!/usr/bin/python3
-"""Distributes an archive to your web servers, using the function do_deploy"""
-from datetime import datetime
+""" a Fabric script (based on the file 1-pack_web_static.py) that distributes..
+    ..an archive to your web servers, using the function do_deploy: """
+
+
 from fabric.api import *
-from os import path
+from datetime import datetime
+from os.path import exists
 
 
-env.hosts = ['52.207.208.21', '54.146.74.86']
-
-
-@runs_once
-def do_pack():
-    """Generates a .tgz archive from the contents
-    of the web_static folder of this repository.
-    """
-
-    d = datetime.now()
-    now = d.strftime('%Y%m%d%H%M%S')
-    path = "versions/web_static_{}.tgz".format(now)
-
-    local("mkdir -p versions")
-    local("tar -czvf {} web_static".format(path))
-    return path
+env.hosts = ['52.207.208.21', '54.146.74.86']  # <IP web-01>, <IP web-02>
+# ^ All remote commands must be executed on your both web servers
+# (using env.hosts = ['<IP web-01>', 'IP web-02'] variable in your script)
 
 
 def do_deploy(archive_path):
-    """Distributes a .tgz archive through web servers
+    """ distributes an archive to my web servers
     """
+    if exists(archive_path) is False:
+        return False  # Returns False if the file at archive_path doesnt exist
+    filename = archive_path.split('/')[-1]
+    # so now filename is <web_static_2021041409349.tgz>
+    no_tgz = '/data/web_static/releases/' + "{}".format(filename.split('.')[0])
+    # curr = '/data/web_static/current'
+    tmp = "/tmp/" + filename
 
-    if path.exists(archive_path):
-        archive = archive_path.split('/')[1]
-        a_path = "/tmp/{}".format(archive)
-        folder = archive.split('.')[0]
-        f_path = "/data/web_static/releases/{}/".format(folder)
-
-        put(archive_path, a_path)
-        run("mkdir -p {}".format(f_path))
-        run("tar -xzf {} -C {}".format(a_path, f_path))
-        run("rm {}".format(a_path))
-        run("mv -f {}web_static/* {}".format(f_path, f_path))
-        run("rm -rf {}web_static".format(f_path))
+    try:
+        put(archive_path, "/tmp/")
+        # ^ Upload the archive to the /tmp/ directory of the web server
+        run("mkdir -p {}/".format(no_tgz))
+        # Uncompress the archive to the folder /data/web_static/releases/
+        # <archive filename without extension> on the web server
+        run("tar -xzf {} -C {}/".format(tmp, no_tgz))
+        run("rm {}".format(tmp))
+        run("mv {}/web_static/* {}/".format(no_tgz, no_tgz))
+        run("rm -rf {}/web_static".format(no_tgz))
+        # ^ Delete the archive from the web server
         run("rm -rf /data/web_static/current")
-        run("ln -s {} /data/web_static/current".format(f_path))
-
+        # Delete the symbolic link /data/web_static/current from the web server
+        run("ln -s {}/ /data/web_static/current".format(no_tgz))
+        # Create a new the symbolic link /data/web_static/current on the
+        # web server, linked to the new version of your code
+        # (/data/web_static/releases/<archive filename without extension>)
         return True
-
-    return False
-
-
-def deploy():
-    """Creates and Distributes a .tgz archive through web servers
-    """
-
-    archive = do_pack()
-    return do_deploy(archive)
+    except:
+        return False
