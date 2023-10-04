@@ -1,52 +1,55 @@
 #!/usr/bin/python3
-"""
-Fabric script that distributes an archive to your web servers
-"""
-
+"""Distributes an archive to your web servers, using the function do_deploy"""
 from datetime import datetime
 from fabric.api import *
-import os
-
-env.hosts = ["52.207.208.21", "54.146.74.86"]
-env.user = "ubuntu"
+from os import path
 
 
+env.hosts = ['52.207.208.21', '54.146.74.86']
+
+
+@runs_once
 def do_pack():
+    """Generates a .tgz archive from the contents
+    of the web_static folder of this repository.
     """
-        return the archive path if archive has generated correctly.
-    """
+
+    d = datetime.now()
+    now = d.strftime('%Y%m%d%H%M%S')
+    path = "versions/web_static_{}.tgz".format(now)
 
     local("mkdir -p versions")
-    date = datetime.now().strftime("%Y%m%d%H%M%S")
-    archived_f_path = "versions/web_static_{}.tgz".format(date)
-    t_gzip_archive = local("tar -cvzf {} web_static".format(archived_f_path))
-
-    if t_gzip_archive.succeeded:
-        return archived_f_path
-    else:
-        return None
+    local("tar -czvf {} web_static".format(path))
+    return path
 
 
 def do_deploy(archive_path):
+    """Distributes a .tgz archive through web servers
     """
-        Distribute archive.
-    """
-    if os.path.exists(archive_path):
-        archived_file = archive_path[9:]
-        newest_version = "/data/web_static/releases/" + archived_file[:-4]
-        archived_file = "/tmp/" + archived_file
-        put(archive_path, "/tmp/")
-        run("sudo mkdir -p {}".format(newest_version))
-        run("sudo tar -xzf {} -C {}/".format(archived_file,
-                                             newest_version))
-        run("sudo rm {}".format(archived_file))
-        run("sudo mv {}/web_static/* {}".format(newest_version,
-                                                newest_version))
-        run("sudo rm -rf {}/web_static".format(newest_version))
-        run("sudo rm -rf /data/web_static/current")
-        run("sudo ln -s {} /data/web_static/current".format(newest_version))
 
-        print("New version deployed!")
+    if path.exists(archive_path):
+        archive = archive_path.split('/')[1]
+        a_path = "/tmp/{}".format(archive)
+        folder = archive.split('.')[0]
+        f_path = "/data/web_static/releases/{}/".format(folder)
+
+        put(archive_path, a_path)
+        run("mkdir -p {}".format(f_path))
+        run("tar -xzf {} -C {}".format(a_path, f_path))
+        run("rm {}".format(a_path))
+        run("mv -f {}web_static/* {}".format(f_path, f_path))
+        run("rm -rf {}web_static".format(f_path))
+        run("rm -rf /data/web_static/current")
+        run("ln -s {} /data/web_static/current".format(f_path))
+
         return True
 
     return False
+
+
+def deploy():
+    """Creates and Distributes a .tgz archive through web servers
+    """
+
+    archive = do_pack()
+    return do_deploy(archive)
