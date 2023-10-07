@@ -27,7 +27,7 @@ chown -hR ubuntu:ubuntu /data/
 # Give ownership of the /data/ folder to the ubuntu user AND group (you can
 # assume this user and group exist). This should be recursive; everything
 # inside should be created/owned by this user/group.
-sed -i '51 i \\n\tlocation /hbnb_static {\n\talias /data/web_static/current;\n\t}' /etc/nginx/sites-available/default
+sed -i '51 i \\n\tlocation /hbnb_static {\n\talias /data/web_static/current;\n\t}' /etc/nginx/sites-enabled/default
 # Update the Nginx configuration to serve the content of
 # /data/web_static/current/ to hbnb_static
 # (ex: https://mydomainname.tech/hbnb_static).
