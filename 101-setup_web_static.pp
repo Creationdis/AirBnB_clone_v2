@@ -21,9 +21,9 @@ exec { 'chown -R ubuntu:ubuntu /data':
   command => '/usr/bin/chown -R ubuntu:ubuntu /data/',
 }
 exec { '/etc/nginx/sites-available/default':
-  command => 'sudo sed -i "/server_name _;/a \\n\tlocation /hbnb_static {\n\t\talias /data/web_static/current/;\n\t}\n" /etc/nginx/sites-available/default',
+  command => 'sudo sed -i "/^server {/a \ \n\tlocation \/hbnb_static {alias /data/web_static/current/;index index.html;}" /etc/nginx/sites-enabled/default',
   provider => shell,
 }
 exec { 'start-nginx':
-  command => '/usr/bin/sudo service nginx restart',
+  command => '/usr/bin/service nginx restart',
 }
