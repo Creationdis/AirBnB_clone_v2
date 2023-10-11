@@ -5,7 +5,7 @@ from fabric.api import task, local, env, put, run, runs_once
 from datetime import datetime
 import os
 
-env.hosts = ['52.207.208.21', '52.206.189.175']
+env.hosts = ['52.207.208.21', '54.146.74.86']
 
 
 @runs_once
@@ -26,8 +26,8 @@ def do_pack():
 def do_deploy(archive_path):
     """ method doc
         fab -f 2-do_deploy_web_static.py do_deploy:
-        archive_path=versions/web_static_20231008182435.tgz
-        -i ~/.ssh/school -u ubuntu
+        archive_path=versions/web_static_20231004201306.tgz
+        -i ~/.ssh/id_rsa -u ubuntu
     """
     try:
         if not os.path.exists(archive_path):
