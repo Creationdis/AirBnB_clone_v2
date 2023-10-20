@@ -4,20 +4,23 @@
 
 from models import storage
 from models.state import State
+from models.amenity import Amenity
+from models.place import Place
 from flask import Flask, render_template
 app = Flask(__name__)
 
 
-@app.route('/cities_by_states')
-def states_list():
+@app.route('/hbnb_filters')
+def hbnb_filters():
     """Render template with states
     """
-    path = '8-cities_by_states.html'
+    path = '100-hbnb.html'
     states = storage.all(State)
-
-    # sort State object alphabetically by name
-    # sorted_states = sorted(states.values(), key=lambda state: state.name)
-    return render_template(path, states=states)
+    amenities = storage.all(Amenity)
+    places = storage.all(Place)
+    return render_template(path, states=states,
+                           amenities=amenities,
+                           places=places)
 
 
 @app.teardown_appcontext
